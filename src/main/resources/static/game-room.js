@@ -19,7 +19,20 @@ document.addEventListener('DOMContentLoaded', function() {
     webSocket.onmessage = function(event) {
         // Handle incoming messages from the server
         const message = JSON.parse(event.data);
-        displayMessage(message);
+        
+        if (message.type === 'chat') {
+            // Display chat messages in the chat box
+            displayChatMessage(message);
+        } else if (message.type === 'start') {
+            // Start of a new game
+            handleGameStart(message);
+        } else if (message.type === 'turn') {
+            // Player's turn to guess
+            handlePlayerTurn(message);
+        } else if (message.type === 'result') {
+            // Result of a guess
+            handleGuessResult(message);
+        }
     };
 
     webSocket.onerror = function(error) {
@@ -40,17 +53,38 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Send message to the server via WebSocket
-        webSocket.send(JSON.stringify({ name: playerName, text: messageText }));
+        // Send chat message to the server via WebSocket
+        webSocket.send(JSON.stringify({ type: 'chat', name: playerName, text: messageText }));
 
         // Clear input field
         chatInput.value = '';
     });
 
     // Function to display chat messages
-    function displayMessage(message) {
+    function displayChatMessage(message) {
         const messageElement = document.createElement('div');
         messageElement.textContent = `${message.name}: ${message.text}`;
         chatBox.appendChild(messageElement);
+    }
+
+    // Function to handle game start message
+    function handleGameStart(message) {
+        // Display the word for the player to guess
+        const wordToGuess = message.word;
+        displayChatMessage({ name: 'Game', text: `Word to guess: ${wordToGuess}` });
+    }
+
+    // Function to handle player's turn message
+    function handlePlayerTurn(message) {
+        // Display whose turn it is to guess
+        const currentPlayer = message.player;
+        displayChatMessage({ name: 'Game', text: `${currentPlayer}'s turn to guess.` });
+    }
+
+    // Function to handle guess result message
+    function handleGuessResult(message) {
+        // Display the result of the guess
+        const guessResult = message.result;
+        displayChatMessage({ name: 'Game', text: guessResult });
     }
 });
